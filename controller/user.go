@@ -38,17 +38,9 @@ func Signup(c *gin.Context) {
 		return
 	}
 
-	err := phoneChk(req.PhoneNumber)
-	if !err {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "他に電話番号が登録されていました",
-		})
-		return
-	}
-
 	code := generateAuthCode(codeLength)
 
-	if err := createPatient(req.PhoneNumber, code); err != "true" {
+	if err := createPatient(req.PhoneNumber); err != "true" {
 		log.Fatalln(err)
 		c.JSON(http.StatusConflict, gin.H{
 			"message": "error",
@@ -56,20 +48,17 @@ func Signup(c *gin.Context) {
 		return
 	}
 
-	log.Println("ok")
+	if err := registerCode(code); err != nil {
+		log.Fatalln(err)
+		c.JSON(http.StatusConflict, gin.H{
+			"message": "error",
+		})
+		return
+	}
 
 	sms.PushSms(req.PhoneNumber, code)
 
 	c.JSON(http.StatusOK, gin.H{"message": "ok"})
-}
-
-// PhoneChk 電話番号が他に存在しないかチェックする関数
-func phoneChk(phoneNumber string) bool {
-	db := mysql.DB
-	var user models.User
-	phoneChk := db.Select("phone_number").Where("phone_number = ?", phoneNumber).First(&user).RecordNotFound()
-
-	return phoneChk
 }
 
 // generateAuthCode 認証コード作成のロジック
@@ -86,18 +75,28 @@ func generateAuthCode(max int) string {
 	return string(b)
 }
 
-func createPatient(phoneNumber, code string) string {
+func createPatient(phoneNumber string) string {
 
 	db := mysql.DB
-	tx := db.Begin()
 
-	user := models.User{PhoneNumber: phoneNumber, Code: code}
-	if err := tx.Create(&user).Error; err != nil {
+	user := models.User{PhoneNumber: phoneNumber}
+	if err := db.FirstOrCreate(&user).Error; err != nil {
 		log.Fatalln(err)
-		return "db"
+		return "phone"
 	}
 
-	tx.Commit()
-
 	return "true"
+}
+
+func registerCode(code string) error {
+	db := mysql.DB
+
+	var user models.User
+
+	if err := db.Model(&user).Update("code", code).Error; err != nil {
+		log.Fatalln(err)
+		return err
+	}
+
+	return nil
 }
