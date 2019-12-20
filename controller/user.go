@@ -2,7 +2,6 @@ package controller
 
 import (
 	"crypto/rand"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -10,7 +9,6 @@ import (
 	"phone-valid/mysql"
 	"phone-valid/util/sms"
 	"regexp"
-	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -93,8 +91,7 @@ func createPatient(phoneNumber, code string) string {
 	db := mysql.DB
 	tx := db.Begin()
 
-	user := models.User{PhoneNumber: phoneNumber, Code: code, UpdatedAt: time.Now(), CreatedAt: time.Now()}
-	fmt.Println(user)
+	user := models.User{PhoneNumber: phoneNumber, Code: code}
 	if err := tx.Create(&user).Error; err != nil {
 		log.Fatalln(err)
 		return "db"
