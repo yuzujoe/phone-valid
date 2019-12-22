@@ -56,7 +56,13 @@ func Signup(c *gin.Context) {
 		return
 	}
 
-	sms.PushSms(req.PhoneNumber, code)
+	if err := sms.PushSms(req.PhoneNumber, code); err != nil {
+		log.Println(err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "通信に失敗しました",
+		})
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "ok"})
 }
