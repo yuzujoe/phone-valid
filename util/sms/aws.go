@@ -3,10 +3,9 @@ package sms
 import (
 	"fmt"
 	"log"
-	"os"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sns"
 )
@@ -15,13 +14,7 @@ import (
 func PushSms(phoneNumber, code string) error {
 	fmt.Println("create session")
 
-	AccessKey := os.Getenv("AWS_ACCESS_KEY")
-	SecretAccessKey := os.Getenv("AWS_SECRET_ACCESS_KEY")
-
-	sess, err := session.NewSession(&aws.Config{
-		Region:      aws.String("ap-northeast-1"),
-		Credentials: credentials.NewStaticCredentials(AccessKey, SecretAccessKey, ""),
-	})
+	sess, err := session.NewSession()
 
 	if err != nil {
 		log.Fatalln(err)
@@ -29,17 +22,17 @@ func PushSms(phoneNumber, code string) error {
 
 	svc := sns.New(sess)
 
+	phone := strings.Replace(phoneNumber, "0", "+81", 1)
+
 	input := &sns.PublishInput{
-		Message:     aws.String("messege" + code + "test"),
-		PhoneNumber: aws.String(phoneNumber),
+		Message:     aws.String("あなたの認証コードは" + code + "です"),
+		PhoneNumber: aws.String(phone),
 	}
 
-	result, err := svc.Publish(input)
+	_, err = svc.Publish(input)
 	if err != nil {
-		log.Println(err)
+		return err
 	}
-
-	fmt.Println(result)
 
 	return nil
 }
