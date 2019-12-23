@@ -38,10 +38,28 @@ func Signup(c *gin.Context) {
 		return
 	}
 
-	err := phoneChk(req.PhoneNumber)
-	if !err {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "他に電話番号が登録されていました",
+	code := generateAuthCode(codeLength)
+
+	if err := createPatient(req.PhoneNumber); err != "true" {
+		log.Fatalln(err)
+		c.JSON(http.StatusConflict, gin.H{
+			"message": "error",
+		})
+		return
+	}
+
+	if err := registerCode(code); err != nil {
+		log.Fatalln(err)
+		c.JSON(http.StatusConflict, gin.H{
+			"message": "error",
+		})
+		return
+	}
+
+	if err := sms.PushSms(req.PhoneNumber, code); err != nil {
+		log.Println(err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "通信に失敗しました",
 		})
 		return
 	}
@@ -63,13 +81,44 @@ func Signup(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "ok"})
 }
 
-// PhoneChk 電話番号が他に存在しないかチェックする関数
-func phoneChk(phoneNumber string) bool {
-	db := mysql.DB
-	var user models.User
-	phoneChk := db.Select("phone_number").Where("phone_number = ?", phoneNumber).First(&user).RecordNotFound()
+// generateAuthCode 認証コード作成のロジック
+func generateAuthCode(max int) string {
+	var table = [...]byte{'1', '2', '3', '4', '5', '6', '7', '8', '9', '0'}
+	b := make([]byte, max)
+	n, err := io.ReadAtLeast(rand.Reader, b, max)
+	if n != max {
+		return err.Error()
+	}
+	for i := 0; i < len(b); i++ {
+		b[i] = table[int(b[i])%len(table)]
+	}
+	return string(b)
+}
 
-	return phoneChk
+func createPatient(phoneNumber string) string {
+
+	db := mysql.DB
+
+	user := models.User{PhoneNumber: phoneNumber}
+	if err := db.FirstOrCreate(&user).Error; err != nil {
+		log.Fatalln(err)
+		return "phone"
+	}
+
+	return "true"
+}
+
+func registerCode(code string) error {
+	db := mysql.DB
+
+	var user models.User
+
+	if err := db.Model(&user).Update("code", code).Error; err != nil {
+		log.Fatalln(err)
+		return err
+	}
+
+	return nil
 }
 
 // generateAuthCode 認証コード作成のロジック

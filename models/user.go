@@ -7,7 +7,7 @@ type User struct {
 
 	PhoneNumber string `gorm:"unique;not null" json:"phone_number" form:"phone_number"`
 
-	Code string `gorm:"column:code; NOT NULL" json:"code" form:"code"`
+	Code string `gorm:"column:code" json:"code" form:"code"`
 
 	UpdatedAt time.Time `gorm:"column:updated_at" json:"updated_at" form:"updated_at"`
 
