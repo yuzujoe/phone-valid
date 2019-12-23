@@ -2,7 +2,7 @@ package sms
 
 import (
 	"fmt"
-	"log
+	"log"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"

@@ -64,16 +64,6 @@ func Signup(c *gin.Context) {
 		return
 	}
 
-	code := generateAuthCode(codeLength)
-
-	if err := createPatient(req.PhoneNumber, code); err != "true" {
-		log.Fatalln(err)
-		c.JSON(http.StatusConflict, gin.H{
-			"message": "error",
-		})
-		return
-	}
-
 	log.Println("ok")
 
 	sms.PushSms(req.PhoneNumber, code)
@@ -119,34 +109,4 @@ func registerCode(code string) error {
 	}
 
 	return nil
-}
-
-// generateAuthCode 認証コード作成のロジック
-func generateAuthCode(max int) string {
-	var table = [...]byte{'1', '2', '3', '4', '5', '6', '7', '8', '9', '0'}
-	b := make([]byte, max)
-	n, err := io.ReadAtLeast(rand.Reader, b, max)
-	if n != max {
-		return err.Error()
-	}
-	for i := 0; i < len(b); i++ {
-		b[i] = table[int(b[i])%len(table)]
-	}
-	return string(b)
-}
-
-func createPatient(phoneNumber, code string) string {
-
-	db := mysql.DB
-	tx := db.Begin()
-
-	user := models.User{PhoneNumber: phoneNumber, Code: code}
-	if err := tx.Create(&user).Error; err != nil {
-		log.Fatalln(err)
-		return "db"
-	}
-
-	tx.Commit()
-
-	return "true"
 }
