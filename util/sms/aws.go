@@ -2,7 +2,7 @@ package sms
 
 import (
 	"fmt"
-	"log"
+	"log
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -13,8 +13,8 @@ import (
 // PushSms SMS送信用のロジック
 func PushSms(phoneNumber, code string) error {
 	fmt.Println("create session")
-
 	sess, err := session.NewSession()
+
 
 	if err != nil {
 		log.Fatalln(err)
@@ -33,6 +33,7 @@ func PushSms(phoneNumber, code string) error {
 	if err != nil {
 		return err
 	}
+
 
 	return nil
 }
