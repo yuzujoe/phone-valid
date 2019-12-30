@@ -4,14 +4,15 @@ import (
 	"log"
 	"phone-valid/models"
 	"phone-valid/mysql"
+	"time"
 )
 
 func CreatePatient(phoneNumber string) string {
 
 	db := mysql.DB
 
-	user := models.User{PhoneNumber: phoneNumber}
-	if err := db.FirstOrCreate(&user).Error; err != nil {
+	var user models.User
+	if err := db.FirstOrCreate(&user, models.User{PhoneNumber: phoneNumber}).Error; err != nil {
 		log.Fatalln(err)
 		return "phone"
 	}
@@ -19,12 +20,14 @@ func CreatePatient(phoneNumber string) string {
 	return "true"
 }
 
-func RegisterCode(code string) error {
+func RegisterCode(phoneNumber, code string) error {
 	db := mysql.DB
 
-	var user models.User
+	var authCode models.AuthenticationCode
 
-	if err := db.Model(&user).Update("code", code).Error; err != nil {
+	expired := time.Now().Add(15 * time.Minute)
+
+	if err := db.Where(models.AuthenticationCode{PhoneNumber: phoneNumber}).Assign(models.AuthenticationCode{Code: code, Expired: expired, UpdatedAt: time.Now()}).FirstOrCreate(&authCode).Error; err != nil {
 		log.Fatalln(err)
 		return err
 	}

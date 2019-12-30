@@ -4,8 +4,6 @@ import "time"
 
 // AuthenticationCode models authentication_codes
 type AuthenticationCode struct {
-	ID int32 `gorm:"column:id" json:"id" form:"id"`
-
 	Code string `gorm:"column:code; not null" json:"code" form:"code"`
 
 	PhoneNumber string `gorm:"column:phone_number" json:"phone_number"`

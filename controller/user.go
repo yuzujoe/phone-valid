@@ -46,7 +46,7 @@ func Signup(c *gin.Context) {
 		return
 	}
 
-	if err := service.RegisterCode(code); err != nil {
+	if err := service.RegisterCode(req.PhoneNumber, code); err != nil {
 		log.Fatalln(err)
 		c.JSON(http.StatusConflict, gin.H{
 			"message": "error",

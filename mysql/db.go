@@ -30,7 +30,6 @@ func Init(path string) *gorm.DB {
 }
 
 func Migrate(db *gorm.DB) {
-	db.DropTable(&models.AuthenticationCode{}, &models.User{})
 	db.AutoMigrate(&models.User{})
 	db.AutoMigrate(&models.AuthenticationCode{}).AddForeignKey("phone_number", "users(phone_number)", "RESTRICT", "RESTRICT")
 }
