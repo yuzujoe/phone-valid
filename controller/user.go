@@ -5,9 +5,13 @@ import (
 	"net/http"
 	"phone-valid/service"
 	"phone-valid/util/auth"
+	"phone-valid/util/jwt"
 	"phone-valid/util/sms"
 	"regexp"
+	"strconv"
+	"time"
 
+	jwt_go "github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 )
 
@@ -84,6 +88,13 @@ func Authentication(c *gin.Context) {
 		return
 	}
 
+	user := service.UserExist(req.PhoneNumber)
+	if user == nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "user not found",
+		})
+	}
+
 	authCode := service.GetCodeInfo(req.PhoneNumber)
 	if authCode == nil {
 		return
@@ -113,7 +124,13 @@ func Authentication(c *gin.Context) {
 		return
 	}
 
+	userID := strconv.FormatInt(int64(user.UserID), 10)
+
+	token, _ := jwt.TokenGenerate(jwt_go.MapClaims{
+		"UserID": userID,
+		"expire": time.Now().Add(time.Hour * 2).Unix(),
+	})
 	c.JSON(http.StatusOK, gin.H{
-		"message": "suceesed login",
+		"token": token,
 	})
 }
