@@ -84,13 +84,32 @@ func Authentication(c *gin.Context) {
 		return
 	}
 
-	user := service.UserExist(req.PhoneNumber)
-	if user == nil {
+	authCode := service.GetCodeInfo(req.PhoneNumber)
+	if authCode == nil {
 		return
 	}
 
-	authCode := service.GetCodeInfo(req.Code)
-	if authCode == nil {
+	compare := service.CompareCode(authCode.Code, req.Code)
+	if !compare {
+		c.JSON(http.StatusNotFound, gin.H{
+			"message": "入力された認証コードが間違っています、再度正しい認証コードを取得してください",
+		})
+		return
+	}
+
+	expired, err := service.CheckExpired(authCode.Expired)
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Server Error",
+		})
+		return
+	}
+
+	if !expired {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "有効期限が切れています、再度認証コードを取得してから入力してください",
+		})
 		return
 	}
 
