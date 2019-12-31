@@ -66,3 +66,31 @@ func Signup(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "ok"})
 }
+
+// Authentication user認証の関数s
+func Authentication(c *gin.Context) {
+	type request struct {
+		PhoneNumber string `json:"phone_number" binding:"required"`
+		Code        string `json:"code" binding:"required"`
+	}
+
+	var req request
+
+	if err := c.ShouldBind(&req); err != nil {
+		log.Println(err)
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "BadRequest",
+		})
+		return
+	}
+
+	user := service.UserExist(req.PhoneNumber)
+
+	if user == nil {
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "suceesed login",
+	})
+}

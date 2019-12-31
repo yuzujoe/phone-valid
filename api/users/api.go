@@ -10,6 +10,6 @@ func Api(r *gin.RouterGroup) {
 	g := r.Group("/users")
 	{
 		g.POST("/signup", controller.Signup)
-		g.POST("/authentication")
+		g.POST("/authentication", controller.Authentication)
 	}
 }
