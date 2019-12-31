@@ -85,8 +85,12 @@ func Authentication(c *gin.Context) {
 	}
 
 	user := service.UserExist(req.PhoneNumber)
-
 	if user == nil {
+		return
+	}
+
+	authCode := service.GetCodeInfo(req.Code)
+	if authCode == nil {
 		return
 	}
 

@@ -18,3 +18,17 @@ func UserExist(phoneNumber string) *models.User {
 
 	return &user
 }
+
+func GetCodeInfo(code string) *models.AuthenticationCode {
+	db := mysql.DB
+
+	var authentication models.AuthenticationCode
+
+	authCode := db.Where("code = ?", code).Select("code, expired").First(&authentication).RecordNotFound()
+
+	if authCode {
+		return nil
+	}
+
+	return &authentication
+}
