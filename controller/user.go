@@ -5,9 +5,13 @@ import (
 	"net/http"
 	"phone-valid/service"
 	"phone-valid/util/auth"
+	"phone-valid/util/jwt"
 	"phone-valid/util/sms"
 	"regexp"
+	"strconv"
+	"time"
 
+	jwt_go "github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 )
 
@@ -65,4 +69,68 @@ func Signup(c *gin.Context) {
 	log.Println("ok")
 
 	c.JSON(http.StatusOK, gin.H{"message": "ok"})
+}
+
+// Authentication user認証の関数s
+func Authentication(c *gin.Context) {
+	type request struct {
+		PhoneNumber string `json:"phone_number" binding:"required"`
+		Code        string `json:"code" binding:"required"`
+	}
+
+	var req request
+
+	if err := c.ShouldBind(&req); err != nil {
+		log.Println(err)
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "BadRequest",
+		})
+		return
+	}
+
+	user := service.UserExist(req.PhoneNumber)
+	if user == nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "user not found",
+		})
+	}
+
+	authCode := service.GetCodeInfo(req.PhoneNumber)
+	if authCode == nil {
+		return
+	}
+
+	compare := service.CompareCode(authCode.Code, req.Code)
+	if !compare {
+		c.JSON(http.StatusNotFound, gin.H{
+			"message": "入力された認証コードが間違っています、再度正しい認証コードを取得してください",
+		})
+		return
+	}
+
+	expired, err := service.CheckExpired(authCode.Expired)
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Server Error",
+		})
+		return
+	}
+
+	if !expired {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "有効期限が切れています、再度認証コードを取得してから入力してください",
+		})
+		return
+	}
+
+	userID := strconv.FormatInt(int64(user.UserID), 10)
+
+	token, _ := jwt.TokenGenerate(jwt_go.MapClaims{
+		"UserID": userID,
+		"expire": time.Now().Add(time.Hour * 2).Unix(),
+	})
+	c.JSON(http.StatusOK, gin.H{
+		"token": token,
+	})
 }
