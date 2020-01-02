@@ -7,17 +7,17 @@ import (
 	"time"
 )
 
-func CreatePatient(phoneNumber string) string {
+func CreatePatient(phoneNumber string) bool {
 
 	db := mysql.DB
 
 	var user models.User
 	if err := db.FirstOrCreate(&user, models.User{PhoneNumber: phoneNumber}).Error; err != nil {
 		log.Fatalln(err)
-		return "phone"
+		return false
 	}
 
-	return "true"
+	return true
 }
 
 func RegisterCode(phoneNumber, code string) error {

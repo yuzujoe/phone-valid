@@ -42,7 +42,7 @@ func Signup(c *gin.Context) {
 
 	code := auth.GenerateAuthCode(codeLength)
 
-	if err := service.CreatePatient(req.PhoneNumber); err != "true" {
+	if err := service.CreatePatient(req.PhoneNumber); err != true {
 		log.Fatalln(err)
 		c.JSON(http.StatusConflict, gin.H{
 			"message": "error",
