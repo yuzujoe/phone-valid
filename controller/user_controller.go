@@ -126,5 +126,5 @@ func Authentication(c *gin.Context) {
 }
 
 func CreateProfile(c *gin.Context) {
-
+	c.JSON(http.StatusOK, "ok")
 }

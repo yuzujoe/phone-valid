@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"phone-valid/middleware"
 	"phone-valid/mysql"
 	"phone-valid/route"
 	"strconv"
@@ -38,6 +39,8 @@ func main() {
 
 	r := gin.Default()
 	gin.SetMode(gin.DebugMode)
+
+	r.Use(middleware.JwtAuth)
 
 	route.Route(r)
 
