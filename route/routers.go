@@ -15,5 +15,6 @@ func Route(r *gin.Engine) {
 	{
 		users.POST("/signup", controller.Signup)
 		users.POST("/authentication", controller.Authentication)
+		users.POST("/:userID/profile", controller.CreateProfile)
 	}
 }

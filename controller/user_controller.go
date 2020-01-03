@@ -124,3 +124,7 @@ func Authentication(c *gin.Context) {
 		"token": token,
 	})
 }
+
+func CreateProfile(c *gin.Context) {
+
+}
