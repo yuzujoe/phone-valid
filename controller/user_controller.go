@@ -3,9 +3,9 @@ package controller
 import (
 	"log"
 	"net/http"
-	"phone-valid/service"
 	"phone-valid/util/auth"
 	"phone-valid/util/jwt"
+	"phone-valid/util/request"
 	"phone-valid/util/sms"
 	"regexp"
 	"strconv"
@@ -18,12 +18,7 @@ import (
 const codeLength = 6
 
 func Signup(c *gin.Context) {
-
-	type request struct {
-		PhoneNumber string `json:"phone_number" binding:"required"`
-	}
-
-	var req request
+	var req request.UserSignupRequest
 
 	if err := c.ShouldBind(&req); err != nil {
 		log.Println(err)
@@ -42,7 +37,7 @@ func Signup(c *gin.Context) {
 
 	code := auth.GenerateAuthCode(codeLength)
 
-	if err := service.CreatePatient(req.PhoneNumber); err != true {
+	if err := createPatient(req.PhoneNumber); err != true {
 		log.Fatalln(err)
 		c.JSON(http.StatusConflict, gin.H{
 			"message": "error",
@@ -50,7 +45,7 @@ func Signup(c *gin.Context) {
 		return
 	}
 
-	if err := service.RegisterCode(req.PhoneNumber, code); err != nil {
+	if err := registerCode(req.PhoneNumber, code); err != nil {
 		log.Fatalln(err)
 		c.JSON(http.StatusConflict, gin.H{
 			"message": "error",
@@ -73,12 +68,7 @@ func Signup(c *gin.Context) {
 
 // Authentication user認証の関数s
 func Authentication(c *gin.Context) {
-	type request struct {
-		PhoneNumber string `json:"phone_number" binding:"required"`
-		Code        string `json:"code" binding:"required"`
-	}
-
-	var req request
+	var req request.UserAuthenticationRequest
 
 	if err := c.ShouldBind(&req); err != nil {
 		log.Println(err)
@@ -88,19 +78,19 @@ func Authentication(c *gin.Context) {
 		return
 	}
 
-	user := service.UserExist(req.PhoneNumber)
+	user := userExist(req.PhoneNumber)
 	if user == nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": "user not found",
 		})
 	}
 
-	authCode := service.GetCodeInfo(req.PhoneNumber)
+	authCode := getCodeInfo(req.PhoneNumber)
 	if authCode == nil {
 		return
 	}
 
-	compare := service.CompareCode(authCode.Code, req.Code)
+	compare := compareCode(authCode.Code, req.Code)
 	if !compare {
 		c.JSON(http.StatusNotFound, gin.H{
 			"message": "入力された認証コードが間違っています、再度正しい認証コードを取得してください",
@@ -108,7 +98,7 @@ func Authentication(c *gin.Context) {
 		return
 	}
 
-	expired, err := service.CheckExpired(authCode.Expired)
+	expired, err := checkExpired(authCode.Expired)
 	if err != nil {
 		log.Println(err)
 		c.JSON(http.StatusInternalServerError, gin.H{
