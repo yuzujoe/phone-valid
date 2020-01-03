@@ -6,6 +6,7 @@ import (
 	"phone-valid/service"
 	"phone-valid/util/auth"
 	"phone-valid/util/jwt"
+	"phone-valid/util/request"
 	"phone-valid/util/sms"
 	"regexp"
 	"strconv"
@@ -18,12 +19,7 @@ import (
 const codeLength = 6
 
 func Signup(c *gin.Context) {
-
-	type request struct {
-		PhoneNumber string `json:"phone_number" binding:"required"`
-	}
-
-	var req request
+	var req request.UserSignupRequest
 
 	if err := c.ShouldBind(&req); err != nil {
 		log.Println(err)
@@ -73,12 +69,7 @@ func Signup(c *gin.Context) {
 
 // Authentication user認証の関数s
 func Authentication(c *gin.Context) {
-	type request struct {
-		PhoneNumber string `json:"phone_number" binding:"required"`
-		Code        string `json:"code" binding:"required"`
-	}
-
-	var req request
+	var req request.UserAuthenticationRequest
 
 	if err := c.ShouldBind(&req); err != nil {
 		log.Println(err)
