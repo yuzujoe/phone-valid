@@ -126,5 +126,14 @@ func Authentication(c *gin.Context) {
 }
 
 func CreateProfile(c *gin.Context) {
+	var req request.CreateProfileRequest
+
+	if err := c.ShouldBind(&req); err != nil {
+		log.Println(err)
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Bad Request",
+		})
+	}
+
 	c.JSON(http.StatusOK, "ok")
 }
