@@ -3,19 +3,14 @@ package controller
 import (
 	"log"
 	"net/http"
-	"phone-valid/util/auth"
 	"phone-valid/util/jwt"
 	"phone-valid/util/request"
-	"phone-valid/util/sms"
-	"regexp"
 	"strconv"
 	"time"
 
 	jwt_go "github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 )
-
-const codeLength = 6
 
 func Signup(c *gin.Context) {
 	var req request.UserSignupRequest
@@ -26,44 +21,12 @@ func Signup(c *gin.Context) {
 		return
 	}
 
-	// 電話番号の正規表現
-	policy := "^\\d{2,4}-?\\d{2,4}-?\\d{3,4}$"
-	re := regexp.MustCompile(policy)
-	reg := re.MatchString(req.PhoneNumber)
-	if !reg {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "BadRequest"})
+	resp, err := userSignupImpl(c, &req)
+	if err != nil {
 		return
 	}
 
-	code := auth.GenerateAuthCode(codeLength)
-
-	if err := createPatient(req.PhoneNumber); err != true {
-		log.Fatalln(err)
-		c.JSON(http.StatusConflict, gin.H{
-			"message": "error",
-		})
-		return
-	}
-
-	if err := registerCode(req.PhoneNumber, code); err != nil {
-		log.Fatalln(err)
-		c.JSON(http.StatusConflict, gin.H{
-			"message": "error",
-		})
-		return
-	}
-
-	if err := sms.PushSms(req.PhoneNumber, code); err != nil {
-		log.Println(err)
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": "通信に失敗しました",
-		})
-		return
-	}
-
-	log.Println("ok")
-
-	c.JSON(http.StatusOK, gin.H{"message": "ok"})
+	c.JSON(http.StatusOK, resp)
 }
 
 // Authentication user認証の関数s
