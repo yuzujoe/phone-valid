@@ -1,17 +1,21 @@
 package controller
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"phone-valid/models"
 	"phone-valid/mysql"
 	"phone-valid/util/auth"
+	"phone-valid/util/jwt"
 	"phone-valid/util/request"
 	"phone-valid/util/response"
 	"phone-valid/util/sms"
 	"regexp"
+	"strconv"
 	"time"
 
+	jwt_go "github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 )
 
@@ -61,6 +65,58 @@ func userSignupImpl(c *gin.Context, request *request.UserSignupRequest) *respons
 	}
 }
 
+func userAuthenticationImpl(c *gin.Context, request *request.UserAuthenticationRequest) (*response.UserAuthenticationSuccessReponse, error) {
+
+	authCode, err := getCodeInfo(request.PhoneNumber)
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusBadRequest, &response.Response{
+			Code:    400,
+			Message: "your input code not correct",
+		})
+		return nil, err
+	}
+
+	if err := compareCode(authCode.Code, request.Code); err != nil {
+		log.Println(err)
+		c.JSON(http.StatusBadRequest, &response.Response{
+			Code:    400,
+			Message: "your input code not correct",
+		})
+		return nil, err
+	}
+
+	if err := checkExpired(authCode.Expired); err != nil {
+		log.Println(err)
+		c.JSON(http.StatusInternalServerError, &response.Response{
+			Code:    401,
+			Message: "Expired, please get the authorization code again and enter",
+		})
+		return nil, err
+	}
+	fmt.Println("ok")
+	user, err := userExist(request.PhoneNumber)
+	if err != nil {
+		c.JSON(http.StatusNotFound, &response.Response{
+			Code:    404,
+			Message: "user not exists",
+		})
+		return nil, nil
+	}
+
+	userID := strconv.FormatInt(int64(user.UserID), 10)
+
+	token, _ := jwt.TokenGenerate(jwt_go.MapClaims{
+		"UserID": userID,
+		"expire": time.Now().Add(time.Hour * 2).Unix(),
+	})
+
+	return &response.UserAuthenticationSuccessReponse{
+		Code:  200,
+		Token: token,
+	}, nil
+}
+
 func phoneValid(phoneNumber string) bool {
 	policy := "^\\d{2,4}-?\\d{2,4}-?\\d{3,4}$"
 	re := regexp.MustCompile(policy)
@@ -99,21 +155,20 @@ func registerCode(phoneNumber, code string) error {
 	return nil
 }
 
-func userExist(phoneNumber string) *models.User {
+func userExist(phoneNumber string) (models.User, error) {
 	db := mysql.DB
 
 	var user models.User
 
-	auth := db.Where("phone_number = ?", phoneNumber).Select("user_id, phone_number").First(&user).RecordNotFound()
-
-	if auth {
-		return nil
+	if err := db.Where("phone_number = ?", phoneNumber).Select("user_id, phone_number").First(&user).Error; err != nil {
+		log.Println(err)
+		return user, err
 	}
 
-	return &user
+	return user, nil
 }
 
-func getCodeInfo(phoneNumber string) *models.AuthenticationCode {
+func getCodeInfo(phoneNumber string) (*models.AuthenticationCode, error) {
 	db := mysql.DB
 
 	var authentication models.AuthenticationCode
@@ -121,26 +176,26 @@ func getCodeInfo(phoneNumber string) *models.AuthenticationCode {
 	authCode := db.Where("phone_number = ?", phoneNumber).Select("phone_number, code, expired").First(&authentication).RecordNotFound()
 
 	if authCode {
-		return nil
+		return nil, db.Error
 	}
 
-	return &authentication
+	return &authentication, nil
 }
 
-func compareCode(code, reqCode string) bool {
+func compareCode(code, reqCode string) error {
 	if code != reqCode {
-		return false
+		return http.ErrAbortHandler
 	}
-	return true
+	return nil
 }
 
-func checkExpired(expired time.Time) (bool, error) {
+func checkExpired(expired time.Time) error {
 	old := expired
 	now := time.Now()
 
 	if old.Before(now) {
-		return false, nil
+		return http.ErrAbortHandler
 	}
 
-	return true, nil
+	return nil
 }
