@@ -10,19 +10,20 @@ import (
 
 	jwt_go "github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
 )
 
 func Signup(c *gin.Context) {
-	var req request.UserSignupRequest
+	req := request.UserSignupRequest{}
 
-	if err := c.ShouldBind(&req); err != nil {
+	if err := c.ShouldBindBodyWith(&req, binding.JSON); err != nil {
 		log.Println(err)
 		c.JSON(http.StatusBadRequest, gin.H{"message": "BadRequest"})
 		return
 	}
 
-	resp, err := userSignupImpl(c, &req)
-	if err != nil {
+	resp := userSignupImpl(c, &req)
+	if resp != nil {
 		return
 	}
 

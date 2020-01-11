@@ -17,15 +17,15 @@ import (
 
 const codeLength = 6
 
-func userSignupImpl(c *gin.Context, request *request.UserSignupRequest) (*response.Response, error) {
+func userSignupImpl(c *gin.Context, request *request.UserSignupRequest) *response.Response {
 
-	if err := phoneValid(request.PhoneNumber); err != nil {
-		log.Println(err)
+	phoneLegCheck := phoneValid(request.PhoneNumber)
+	if !phoneLegCheck {
 		c.JSON(http.StatusBadRequest, &response.Response{
 			Code:    http.StatusBadRequest,
 			Message: "The value entered is incorrect phone number format",
 		})
-		return nil, err
+		return &response.Response{}
 	}
 
 	if err := createUser(request.PhoneNumber); err != nil {
@@ -34,7 +34,7 @@ func userSignupImpl(c *gin.Context, request *request.UserSignupRequest) (*respon
 			Code:    http.StatusInternalServerError,
 			Message: "Connection to server failed, please try again in a good communication environment",
 		})
-		return nil, err
+		return &response.Response{}
 	}
 
 	code := auth.GenerateAuthCode(codeLength)
@@ -44,7 +44,7 @@ func userSignupImpl(c *gin.Context, request *request.UserSignupRequest) (*respon
 			Code:    http.StatusInternalServerError,
 			Message: "Connection to server failed, please try again in a good communication environment",
 		})
-		return nil, err
+		return &response.Response{}
 	}
 
 	if err := sms.PushSms(request.PhoneNumber, code); err != nil {
@@ -52,23 +52,23 @@ func userSignupImpl(c *gin.Context, request *request.UserSignupRequest) (*respon
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": "通信に失敗しました",
 		})
-		return nil, err
+		return &response.Response{}
 	}
 
 	return &response.Response{
 		Code:    http.StatusOK,
 		Message: "A 6-digit confirmation code has been sent to the entered phone number",
-	}, nil
+	}
 }
 
-func phoneValid(phoneNumber string) error {
+func phoneValid(phoneNumber string) bool {
 	policy := "^\\d{2,4}-?\\d{2,4}-?\\d{3,4}$"
 	re := regexp.MustCompile(policy)
 	reg := re.MatchString(phoneNumber)
 	if !reg {
-		return nil
+		return false
 	}
-	return nil
+	return true
 }
 
 func createUser(phoneNumber string) error {
