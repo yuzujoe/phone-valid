@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"phone-valid/util/request"
+	"phone-valid/util/response"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
@@ -45,14 +46,21 @@ func Authentication(c *gin.Context) {
 }
 
 func CreateProfile(c *gin.Context) {
-	var req request.CreateProfileRequest
+	req := request.CreateProfileRequest{}
 
-	if err := c.ShouldBind(&req); err != nil {
+	if err := c.ShouldBindBodyWith(&req, binding.JSON); err != nil {
 		log.Println(err)
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "Bad Request",
+		c.JSON(http.StatusBadRequest, &response.Response{
+			Code:    400,
+			Message: "Bad Request",
 		})
+		return
 	}
 
-	c.JSON(http.StatusOK, "ok")
+	resp, err := userProfileCreateImpl(c, &req)
+	if err != nil {
+		return
+	}
+
+	c.JSON(http.StatusOK, resp)
 }

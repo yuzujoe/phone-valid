@@ -117,6 +117,14 @@ func userAuthenticationImpl(c *gin.Context, request *request.UserAuthenticationR
 	}, nil
 }
 
+func userProfileCreateImpl(c *gin.Context, request *request.CreateProfileRequest) (*response.Response, error) {
+
+	return &response.Response{
+		Code:    200,
+		Message: "Created Profile",
+	}, nil
+}
+
 func phoneValid(phoneNumber string) bool {
 	policy := "^\\d{2,4}-?\\d{2,4}-?\\d{3,4}$"
 	re := regexp.MustCompile(policy)
