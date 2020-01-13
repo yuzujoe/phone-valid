@@ -47,7 +47,6 @@ func Authentication(c *gin.Context) {
 
 func CreateProfile(c *gin.Context) {
 	req := request.CreateProfileRequest{}
-
 	if err := c.ShouldBindBodyWith(&req, binding.JSON); err != nil {
 		log.Println(err)
 		c.JSON(http.StatusBadRequest, &response.Response{

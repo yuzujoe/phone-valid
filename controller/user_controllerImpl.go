@@ -118,6 +118,13 @@ func userAuthenticationImpl(c *gin.Context, request *request.UserAuthenticationR
 }
 
 func userProfileCreateImpl(c *gin.Context, request *request.CreateProfileRequest) (*response.Response, error) {
+	if err := insertProfile(c, request); err != nil {
+		c.JSON(http.StatusInternalServerError, response.Response{
+			Code:    500,
+			Message: err.Error(),
+		})
+		return nil, err
+	}
 
 	return &response.Response{
 		Code:    200,
