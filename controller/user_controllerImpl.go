@@ -35,8 +35,8 @@ func userSignupImpl(c *gin.Context, request *request.UserSignupRequest) *respons
 	if err := createUser(request.PhoneNumber); err != nil {
 		log.Println(err)
 		c.JSON(http.StatusInternalServerError, &response.Response{
-			Code:    http.StatusInternalServerError,
-			Message: "Connection to server failed, please try again in a good communication environment",
+			Code:    500,
+			Message: response.InternalServerError,
 		})
 		return &response.Response{}
 	}
@@ -45,16 +45,17 @@ func userSignupImpl(c *gin.Context, request *request.UserSignupRequest) *respons
 	if err := registerCode(request.PhoneNumber, code); err != nil {
 		log.Println(err)
 		c.JSON(http.StatusInternalServerError, &response.Response{
-			Code:    http.StatusInternalServerError,
-			Message: "Connection to server failed, please try again in a good communication environment",
+			Code:    500,
+			Message: response.InternalServerError,
 		})
 		return &response.Response{}
 	}
 
 	if err := sms.PushSms(request.PhoneNumber, code); err != nil {
 		log.Println(err)
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": "通信に失敗しました",
+		c.JSON(http.StatusInternalServerError, response.Response{
+			Code:    500,
+			Message: response.InternalServerError,
 		})
 		return &response.Response{}
 	}
@@ -121,7 +122,7 @@ func userProfileCreateImpl(c *gin.Context, request *request.CreateProfileRequest
 	if err := insertProfile(c, request); err != nil {
 		c.JSON(http.StatusInternalServerError, response.Response{
 			Code:    500,
-			Message: err.Error(),
+			Message: response.InternalServerError,
 		})
 		return nil, err
 	}
