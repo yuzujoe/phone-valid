@@ -26,8 +26,8 @@ func userSignupImpl(c *gin.Context, request *request.UserSignupRequest) *respons
 	phoneLegCheck := phoneValid(request.PhoneNumber)
 	if !phoneLegCheck {
 		c.JSON(http.StatusBadRequest, &response.Response{
-			Code:    http.StatusBadRequest,
-			Message: "The value entered is incorrect phone number format",
+			Code:    400,
+			Message: response.UserSignup400Reponse,
 		})
 		return &response.Response{}
 	}
@@ -73,7 +73,7 @@ func userAuthenticationImpl(c *gin.Context, request *request.UserAuthenticationR
 		log.Println(err)
 		c.JSON(http.StatusBadRequest, &response.Response{
 			Code:    400,
-			Message: "your input code not correct",
+			Message: response.UserAuthentication400Response,
 		})
 		return nil, err
 	}
@@ -82,7 +82,7 @@ func userAuthenticationImpl(c *gin.Context, request *request.UserAuthenticationR
 		log.Println(err)
 		c.JSON(http.StatusBadRequest, &response.Response{
 			Code:    400,
-			Message: "your input code not correct",
+			Message: response.UserAuthentication400Response,
 		})
 		return nil, err
 	}
@@ -91,7 +91,7 @@ func userAuthenticationImpl(c *gin.Context, request *request.UserAuthenticationR
 		log.Println(err)
 		c.JSON(http.StatusInternalServerError, &response.Response{
 			Code:    401,
-			Message: "Expired, please get the authorization code again and enter",
+			Message: response.UserAuthentication401Response,
 		})
 		return nil, err
 	}
@@ -100,7 +100,7 @@ func userAuthenticationImpl(c *gin.Context, request *request.UserAuthenticationR
 	if err != nil {
 		c.JSON(http.StatusNotFound, &response.Response{
 			Code:    404,
-			Message: "user not exists",
+			Message: response.UserAuthentication404Response,
 		})
 		return nil, nil
 	}
@@ -129,7 +129,7 @@ func userProfileCreateImpl(c *gin.Context, request *request.CreateProfileRequest
 
 	return &response.Response{
 		Code:    200,
-		Message: "Created Profile",
+		Message: response.UserCreateProfileSuccessResponse,
 	}, nil
 }
 
