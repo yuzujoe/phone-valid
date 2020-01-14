@@ -15,7 +15,10 @@ func Signup(c *gin.Context) {
 
 	if err := c.ShouldBindBodyWith(&req, binding.JSON); err != nil {
 		log.Println(err)
-		c.JSON(http.StatusBadRequest, gin.H{"message": "BadRequest"})
+		c.JSON(http.StatusBadRequest, &response.Response{
+			Code:    400,
+			Message: err.Error(),
+		})
 		return
 	}
 
@@ -33,7 +36,10 @@ func Authentication(c *gin.Context) {
 
 	if err := c.ShouldBindBodyWith(&req, binding.JSON); err != nil {
 		log.Println(err)
-		c.JSON(http.StatusBadRequest, gin.H{"message": "BadRequest"})
+		c.JSON(http.StatusBadRequest, &response.Response{
+			Code:    400,
+			Message: err.Error(),
+		})
 		return
 	}
 
@@ -51,7 +57,7 @@ func CreateProfile(c *gin.Context) {
 		log.Println(err)
 		c.JSON(http.StatusBadRequest, &response.Response{
 			Code:    400,
-			Message: "Bad Request",
+			Message: err.Error(),
 		})
 		return
 	}
