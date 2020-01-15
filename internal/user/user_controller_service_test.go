@@ -34,3 +34,18 @@ func Test_checkExpired(t *testing.T) {
 		}
 	}
 }
+
+func Test_compareCode(t *testing.T) {
+	cases := []struct {
+		code    string
+		reqCode string
+	}{
+		{code: "187398", reqCode: "187398"},
+		{code: "187368", reqCode: "187364"},
+	}
+	for _, tt := range cases {
+		if err := compareCode(tt.code, tt.reqCode); err != nil {
+			t.Errorf("compareCode() error = %v", err)
+		}
+	}
+}
