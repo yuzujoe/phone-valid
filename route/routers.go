@@ -1,9 +1,8 @@
 package route
 
 import (
-	"phone-valid/controller"
-
 	"github.com/gin-gonic/gin"
+	"phone-valid/internal/user"
 )
 
 func Route(r *gin.Engine) {
@@ -12,8 +11,8 @@ func Route(r *gin.Engine) {
 
 	users := rg.Group("/users")
 	{
-		users.POST("/signup", controller.Signup)
-		users.POST("/authentication", controller.Authentication)
-		users.POST("/profile/:userID", controller.CreateProfile)
+		users.POST("/signup", user.Signup)
+		users.POST("/authentication", user.Authentication)
+		users.POST("/profile/:userID", user.CreateProfile)
 	}
 }
