@@ -9,7 +9,6 @@ import (
 	"phone-valid/util/request"
 	"phone-valid/util/response"
 	"phone-valid/util/sms"
-	"regexp"
 	"strconv"
 	"time"
 
@@ -21,8 +20,7 @@ const codeLength = 6
 
 func userSignupImpl(c *gin.Context, request *request.UserSignupRequest) *response.Response {
 
-	phoneLegCheck := phoneValid(request.PhoneNumber)
-	if !phoneLegCheck {
+	if err := phoneValid(request.PhoneNumber); err != nil {
 		c.JSON(http.StatusBadRequest, &response.Response{
 			Code:    400,
 			Message: response.UserSignup400Reponse,
@@ -129,14 +127,4 @@ func userProfileCreateImpl(c *gin.Context, request *request.CreateProfileRequest
 		Code:    200,
 		Message: response.UserCreateProfileSuccessResponse,
 	}, nil
-}
-
-func phoneValid(phoneNumber string) bool {
-	policy := "^\\d{2,4}-?\\d{2,4}-?\\d{3,4}$"
-	re := regexp.MustCompile(policy)
-	reg := re.MatchString(phoneNumber)
-	if !reg {
-		return false
-	}
-	return true
 }

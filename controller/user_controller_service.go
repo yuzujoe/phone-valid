@@ -6,6 +6,7 @@ import (
 	"phone-valid/models"
 	"phone-valid/mysql"
 	"phone-valid/util/request"
+	"regexp"
 	"strconv"
 	"time"
 
@@ -102,5 +103,15 @@ func checkExpired(expired time.Time) error {
 		return http.ErrAbortHandler
 	}
 
+	return nil
+}
+
+func phoneValid(phoneNumber string) error {
+	policy := "^\\d{2,4}-?\\d{2,4}-?\\d{3,4}$"
+	re := regexp.MustCompile(policy)
+	reg := re.MatchString(phoneNumber)
+	if !reg {
+		return http.ErrAbortHandler
+	}
 	return nil
 }
