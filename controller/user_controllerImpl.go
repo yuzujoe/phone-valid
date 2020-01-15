@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"phone-valid/models"
-	"phone-valid/mysql"
 	"phone-valid/util/auth"
 	"phone-valid/util/jwt"
 	"phone-valid/util/request"
@@ -141,77 +139,4 @@ func phoneValid(phoneNumber string) bool {
 		return false
 	}
 	return true
-}
-
-func createUser(phoneNumber string) error {
-
-	db := mysql.DB
-
-	var user models.User
-	if err := db.FirstOrCreate(&user, models.User{PhoneNumber: phoneNumber}).Error; err != nil {
-		log.Fatalln(err)
-		return nil
-	}
-
-	return nil
-}
-
-func registerCode(phoneNumber, code string) error {
-	db := mysql.DB
-
-	var authCode models.AuthenticationCode
-
-	expired := time.Now().Add(15 * time.Minute)
-
-	if err := db.Where(models.AuthenticationCode{PhoneNumber: phoneNumber}).Assign(models.AuthenticationCode{Code: code, Expired: expired, UpdatedAt: time.Now()}).FirstOrCreate(&authCode).Error; err != nil {
-		log.Fatalln(err)
-		return err
-	}
-
-	return nil
-}
-
-func userExist(phoneNumber string) (models.User, error) {
-	db := mysql.DB
-
-	var user models.User
-
-	if err := db.Where("phone_number = ?", phoneNumber).Select("user_id, phone_number").First(&user).Error; err != nil {
-		log.Println(err)
-		return user, err
-	}
-
-	return user, nil
-}
-
-func getCodeInfo(phoneNumber string) (*models.AuthenticationCode, error) {
-	db := mysql.DB
-
-	var authentication models.AuthenticationCode
-
-	authCode := db.Where("phone_number = ?", phoneNumber).Select("phone_number, code, expired").First(&authentication).RecordNotFound()
-
-	if authCode {
-		return nil, db.Error
-	}
-
-	return &authentication, nil
-}
-
-func compareCode(code, reqCode string) error {
-	if code != reqCode {
-		return http.ErrAbortHandler
-	}
-	return nil
-}
-
-func checkExpired(expired time.Time) error {
-	old := expired
-	now := time.Now()
-
-	if old.Before(now) {
-		return http.ErrAbortHandler
-	}
-
-	return nil
 }
