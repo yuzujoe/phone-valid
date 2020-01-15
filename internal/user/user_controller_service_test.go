@@ -1,6 +1,9 @@
 package user
 
-import "testing"
+import (
+	"testing"
+	"time"
+)
 
 func Test_phoneValid(t *testing.T) {
 	cases := []struct {
@@ -12,6 +15,22 @@ func Test_phoneValid(t *testing.T) {
 	for _, tt := range cases {
 		if err := phoneValid(tt.phoneNumber); err != nil {
 			t.Error(err)
+		}
+	}
+}
+
+func Test_checkExpired(t *testing.T) {
+	cases := []struct {
+		expired time.Time
+	}{
+		// TODO: Add test cases.
+		{expired: time.Now().Add(15 * time.Minute)},
+		{expired: time.Now()},
+		{expired: time.Now().Add(-15 * time.Minute)},
+	}
+	for _, tt := range cases {
+		if err := checkExpired(tt.expired); err != nil {
+			t.Errorf("checkExpired() error = %v", err)
 		}
 	}
 }
