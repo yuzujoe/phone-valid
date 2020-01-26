@@ -15,7 +15,6 @@ func PushSms(phoneNumber, code string) error {
 	fmt.Println("create session")
 	sess, err := session.NewSession()
 
-
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -25,15 +24,17 @@ func PushSms(phoneNumber, code string) error {
 	phone := strings.Replace(phoneNumber, "0", "+81", 1)
 
 	input := &sns.PublishInput{
-		Message:     aws.String("あなたの認証コードは" + code + "です"),
+		Subject:     aws.String("test message"),
+		Message:     aws.String("your auth code is" + code + "thats expire at 15 min"),
 		PhoneNumber: aws.String(phone),
 	}
+
+	fmt.Println(input)
 
 	_, err = svc.Publish(input)
 	if err != nil {
 		return err
 	}
-
 
 	return nil
 }
