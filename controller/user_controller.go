@@ -22,8 +22,8 @@ func Signup(c *gin.Context) {
 		return
 	}
 
-	resp := userSignupImpl(c, &req)
-	if resp == nil {
+	resp, err := userSignupImpl(c, &req)
+	if err != nil {
 		return
 	}
 

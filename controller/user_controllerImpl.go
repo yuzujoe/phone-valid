@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -18,48 +19,39 @@ import (
 
 const codeLength = 6
 
-func userSignupImpl(c *gin.Context, request *request.UserSignupRequest) *response.Response {
+func userSignupImpl(c *gin.Context, request *request.UserSignupRequest) (*response.Response, error) {
 
-	if err := phoneValid(request.PhoneNumber); err != nil {
-		c.JSON(http.StatusBadRequest, &response.Response{
-			Code:    400,
-			Message: response.UserSignup400Reponse,
-		})
-		return &response.Response{}
+	phoneValid := phoneValid(request.PhoneNumber)
+	if !phoneValid {
+		var err error
+		err = errors.New("phone format valid error")
+		c.JSON(http.StatusBadRequest, &response.UserSignup400Reponse)
+		return nil, err
 	}
 
 	if err := createUser(request.PhoneNumber); err != nil {
 		log.Println(err)
-		c.JSON(http.StatusInternalServerError, &response.Response{
-			Code:    500,
-			Message: response.InternalServerError,
-		})
-		return &response.Response{}
+		c.JSON(http.StatusInternalServerError, response.InternalServerError)
+		return nil, err
 	}
 
 	code := auth.GenerateAuthCode(codeLength)
 	if err := registerCode(request.PhoneNumber, code); err != nil {
 		log.Println(err)
-		c.JSON(http.StatusInternalServerError, &response.Response{
-			Code:    500,
-			Message: response.InternalServerError,
-		})
-		return &response.Response{}
+		c.JSON(http.StatusInternalServerError, response.InternalServerError)
+		return nil, err
 	}
 
 	if err := sms.PushSms(request.PhoneNumber, code); err != nil {
 		log.Println(err)
-		c.JSON(http.StatusInternalServerError, response.Response{
-			Code:    500,
-			Message: response.InternalServerError,
-		})
-		return &response.Response{}
+		c.JSON(http.StatusInternalServerError, response.InternalServerError)
+		return nil, err
 	}
 
 	return &response.Response{
 		Code:    http.StatusOK,
 		Message: "A 6-digit confirmation code has been sent to the entered phone number",
-	}
+	}, nil
 }
 
 func userAuthenticationImpl(c *gin.Context, request *request.UserAuthenticationRequest) (*response.UserAuthenticationSuccessReponse, error) {
@@ -116,10 +108,7 @@ func userAuthenticationImpl(c *gin.Context, request *request.UserAuthenticationR
 
 func userProfileCreateImpl(c *gin.Context, request *request.CreateProfileRequest) (*response.Response, error) {
 	if err := insertProfile(c, request); err != nil {
-		c.JSON(http.StatusInternalServerError, response.Response{
-			Code:    500,
-			Message: response.InternalServerError,
-		})
+		c.JSON(http.StatusInternalServerError, response.InternalServerError)
 		return nil, err
 	}
 

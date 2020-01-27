@@ -1,10 +1,16 @@
 package response
 
-const (
+var (
 	// InternalServerError 500 error response message
-	InternalServerError = "sorry, server error occurring, please wait for recovery"
+	InternalServerError = &Response{
+		Code:    500,
+		Message: "sorry, server error occurring, please wait for recovery",
+	}
 	// UserSignup400Reponse user/signin api 400 response messege
-	UserSignup400Reponse = "Please enter the correct phone number"
+	UserSignup400Reponse = &Response{
+		Code:    400,
+		Message: "Please enter the correct phone number",
+	}
 	// UserAuthentication400Response  user/authentication api 400 response messege
 	UserAuthentication400Response = "Your input code not correct"
 	// UserAuthentication401Response user/authentication api 401 response messege
