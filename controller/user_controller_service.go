@@ -107,7 +107,7 @@ func checkExpired(expired time.Time) error {
 }
 
 func phoneValid(phoneNumber string) bool {
-	policy := "^\\d{2,4}-?\\d{2,4}-?\\d{3,4}$"
+	policy := "^\\d{3}-?\\d{2,4}-?\\d{3,4}$"
 	re := regexp.MustCompile(policy)
 	reg := re.MatchString(phoneNumber)
 	if !reg {

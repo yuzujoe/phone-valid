@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"errors"
 	"log"
 	"net/http"
 	"phone-valid/util/request"
@@ -15,6 +16,7 @@ func Signup(c *gin.Context) {
 
 	if err := c.ShouldBindBodyWith(&req, binding.JSON); err != nil {
 		log.Println(err)
+		err = errors.New("please enter phone number")
 		c.JSON(http.StatusBadRequest, &response.Response{
 			Code:    400,
 			Message: err.Error(),
@@ -24,6 +26,18 @@ func Signup(c *gin.Context) {
 
 	resp, err := userSignupImpl(c, &req)
 	if err != nil {
+		log.Println(err)
+		if errors.Is(err, response.UserSignup400Reponse) {
+			c.JSON(400, &response.Response{
+				Code:    400,
+				Message: err.Error(),
+			})
+			return
+		}
+		c.JSON(500, &response.Response{
+			Code:    500,
+			Message: err.Error(),
+		})
 		return
 	}
 

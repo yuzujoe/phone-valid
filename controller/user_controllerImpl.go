@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -20,31 +19,27 @@ import (
 const codeLength = 6
 
 func userSignupImpl(c *gin.Context, request *request.UserSignupRequest) (*response.Response, error) {
+	var err error
 
 	phoneValid := phoneValid(request.PhoneNumber)
 	if !phoneValid {
-		var err error
-		err = errors.New("phone format valid error")
-		c.JSON(http.StatusBadRequest, &response.UserSignup400Reponse)
+		err = response.SignupBadRequestResponse()
 		return nil, err
 	}
 
 	if err := createUser(request.PhoneNumber); err != nil {
-		log.Println(err)
-		c.JSON(http.StatusInternalServerError, response.InternalServerError)
+		err = response.ServerErrorResponse()
 		return nil, err
 	}
 
 	code := auth.GenerateAuthCode(codeLength)
 	if err := registerCode(request.PhoneNumber, code); err != nil {
-		log.Println(err)
-		c.JSON(http.StatusInternalServerError, response.InternalServerError)
+		err = response.ServerErrorResponse()
 		return nil, err
 	}
 
 	if err := sms.PushSms(request.PhoneNumber, code); err != nil {
-		log.Println(err)
-		c.JSON(http.StatusInternalServerError, response.InternalServerError)
+		err = response.ServerErrorResponse()
 		return nil, err
 	}
 
@@ -114,6 +109,6 @@ func userProfileCreateImpl(c *gin.Context, request *request.CreateProfileRequest
 
 	return &response.Response{
 		Code:    200,
-		Message: response.UserCreateProfileSuccessResponse,
+		Message: "UserCreateProfileSuccessResponse",
 	}, nil
 }
