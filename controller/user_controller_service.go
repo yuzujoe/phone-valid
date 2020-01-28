@@ -46,15 +46,16 @@ func createUser(phoneNumber string) error {
 	return nil
 }
 
-func registerCode(phoneNumber, code string) error {
+func registerCode(phoneNumber, code, requestToken string) error {
 	db := mysql.DB
 
 	var authCode models.AuthenticationCode
 
 	expired := time.Now().Add(15 * time.Minute)
 
-	if err := db.Where(models.AuthenticationCode{PhoneNumber: phoneNumber}).Assign(models.AuthenticationCode{Code: code, Expired: expired, UpdatedAt: time.Now()}).FirstOrCreate(&authCode).Error; err != nil {
-		log.Fatalln(err)
+	if err := db.Where(models.AuthenticationCode{PhoneNumber: phoneNumber}).
+		Assign(models.AuthenticationCode{Code: code, RequestToken: requestToken, Expired: expired, UpdatedAt: time.Now()}).
+		FirstOrCreate(&authCode).Error; err != nil {
 		return err
 	}
 

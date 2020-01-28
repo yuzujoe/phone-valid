@@ -20,6 +20,12 @@ type Response struct {
 	Message string `json:"message"`
 }
 
+type RequestToken struct {
+	Code         int64  `json:"code"`
+	RequestToken string `json:"request_token"`
+	Message      string `json:"message"`
+}
+
 type UserAuthenticationSuccessReponse struct {
 	Code  int64  `json:"code"`
 	Token string `json:"token"`

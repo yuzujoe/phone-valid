@@ -14,9 +14,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const codeLength = 6
+const (
+	codeLength  = 6
+	tokenLength = 32
+)
 
-func userSignupImpl(c *gin.Context, request *request.UserSignupRequest) (*response.Response, error) {
+func userSignupImpl(c *gin.Context, request *request.UserSignupRequest) (*response.RequestToken, error) {
 	var err error
 
 	phoneValid := phoneValid(request.PhoneNumber)
@@ -31,7 +34,8 @@ func userSignupImpl(c *gin.Context, request *request.UserSignupRequest) (*respon
 	}
 
 	code := auth.GenerateAuthCode(codeLength)
-	if err := registerCode(request.PhoneNumber, code); err != nil {
+	requestToken := auth.GenerateRequestToken(tokenLength)
+	if err := registerCode(request.PhoneNumber, code, requestToken); err != nil {
 		err = response.ServerErrorResponse()
 		return nil, err
 	}
@@ -41,9 +45,10 @@ func userSignupImpl(c *gin.Context, request *request.UserSignupRequest) (*respon
 		return nil, err
 	}
 
-	return &response.Response{
-		Code:    http.StatusOK,
-		Message: "A 6-digit confirmation code has been sent to the entered phone number",
+	return &response.RequestToken{
+		Code:         http.StatusOK,
+		RequestToken: requestToken,
+		Message:      "A 6-digit confirmation code has been sent to the entered phone number",
 	}, nil
 }
 

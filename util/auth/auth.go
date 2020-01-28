@@ -2,6 +2,7 @@ package auth
 
 import (
 	"crypto/rand"
+	"encoding/hex"
 	"io"
 )
 
@@ -17,4 +18,23 @@ func GenerateAuthCode(max int) string {
 		b[i] = table[int(b[i])%len(table)]
 	}
 	return string(b)
+}
+
+func GenerateRequestToken(tokenLength int) string {
+	token := iniRandomString(tokenLength)
+	return token
+}
+
+func iniRandomString(n int) string {
+	strings := hex.EncodeToString(bytes(n))
+	return strings
+}
+
+func bytes(n int) []byte {
+	b := make([]byte, n)
+	_, err := rand.Read(b)
+	if err != nil {
+		panic(err)
+	}
+	return b
 }
