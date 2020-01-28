@@ -1,8 +1,6 @@
 package controller
 
 import (
-	"fmt"
-	"log"
 	"net/http"
 	"phone-valid/util/auth"
 	"phone-valid/util/jwt"
@@ -53,39 +51,26 @@ func userAuthenticationImpl(c *gin.Context, request *request.UserAuthenticationR
 
 	authCode, err := getCodeInfo(request.PhoneNumber)
 	if err != nil {
-		log.Println(err)
-		c.JSON(http.StatusBadRequest, &response.Response{
-			Code:    400,
-			Message: response.UserAuthentication400Response,
-		})
+		err = response.Authenticate400Err()
 		return nil, err
 	}
 
 	if err := compareCode(authCode.Code, request.Code); err != nil {
-		log.Println(err)
-		c.JSON(http.StatusBadRequest, &response.Response{
-			Code:    400,
-			Message: response.UserAuthentication400Response,
-		})
-		return nil, err
+		if err != nil {
+			err = response.Authenticate400Err()
+			return nil, err
+		}
 	}
 
 	if err := checkExpired(authCode.Expired); err != nil {
-		log.Println(err)
-		c.JSON(http.StatusInternalServerError, &response.Response{
-			Code:    401,
-			Message: response.UserAuthentication401Response,
-		})
+		err = response.Auth403Err()
 		return nil, err
 	}
-	fmt.Println("ok")
+
 	user, err := userExist(request.PhoneNumber)
 	if err != nil {
-		c.JSON(http.StatusNotFound, &response.Response{
-			Code:    404,
-			Message: response.UserAuthentication404Response,
-		})
-		return nil, nil
+		err = response.Auth404Err()
+		return nil, err
 	}
 
 	userID := strconv.FormatInt(int64(user.UserID), 10)
@@ -103,7 +88,7 @@ func userAuthenticationImpl(c *gin.Context, request *request.UserAuthenticationR
 
 func userProfileCreateImpl(c *gin.Context, request *request.CreateProfileRequest) (*response.Response, error) {
 	if err := insertProfile(c, request); err != nil {
-		c.JSON(http.StatusInternalServerError, response.InternalServerError)
+		err = response.ServerErrorResponse()
 		return nil, err
 	}
 

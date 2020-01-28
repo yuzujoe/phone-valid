@@ -8,11 +8,11 @@ var (
 	// UserSignup400Reponse user/signin api 400 response messege
 	UserSignup400Reponse = signup400Response()
 	// UserAuthentication400Response  user/authentication api 400 response messege
-	UserAuthentication400Response = "Your input code not correct"
-	// UserAuthentication401Response user/authentication api 401 response messege
-	UserAuthentication401Response = "AuthCode Expired, please get the authorization code again and enter"
+	UserAuthentication400Response = auth400Response()
+	// UserAuthentication403Response user/authentication api 403 response messege
+	UserAuthentication403Response = auth403Response()
 	// UserAuthentication404Response user/authentication api 404 response messege
-	UserAuthentication404Response = "User not exists"
+	UserAuthentication404Response = auth404Response()
 )
 
 type Response struct {
@@ -31,10 +31,34 @@ func serverErrorMessage() error {
 	return errors.New("sorry, server error occurring, please wait for recovery")
 }
 
+func auth400Response() error {
+	return errors.New("Your input code not correct")
+}
+
+func auth403Response() error {
+	return errors.New("AuthCode Expired, please get the authorization code again and enter")
+}
+
+func auth404Response() error {
+	return errors.New("User not exists")
+}
+
 func SignupBadRequestResponse() error {
 	return UserSignup400Reponse
 }
 
 func ServerErrorResponse() error {
 	return InternalServerError
+}
+
+func Authenticate400Err() error {
+	return UserAuthentication400Response
+}
+
+func Auth403Err() error {
+	return UserAuthentication403Response
+}
+
+func Auth404Err() error {
+	return UserAuthentication404Response
 }
