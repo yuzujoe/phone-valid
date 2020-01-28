@@ -106,12 +106,12 @@ func checkExpired(expired time.Time) error {
 	return nil
 }
 
-func phoneValid(phoneNumber string) error {
-	policy := "^\\d{2,4}-?\\d{2,4}-?\\d{3,4}$"
+func phoneValid(phoneNumber string) bool {
+	policy := "^\\d{3}-?\\d{2,4}-?\\d{3,4}$"
 	re := regexp.MustCompile(policy)
 	reg := re.MatchString(phoneNumber)
 	if !reg {
-		return http.ErrAbortHandler
+		return false
 	}
-	return nil
+	return true
 }
