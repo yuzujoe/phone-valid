@@ -40,8 +40,7 @@ func userSignupImpl(c *gin.Context, request *request.UserSignupRequest) (*respon
 		return nil, err
 	}
 
-	if err := sms.PushSms(request.PhoneNumber, code); err != nil {
-		err = response.ServerErrorResponse()
+	if err := sms.PushSms(c, request.PhoneNumber, code); err != nil {
 		return nil, err
 	}
 

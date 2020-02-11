@@ -41,7 +41,7 @@ func main() {
 	r := gin.Default()
 	gin.SetMode(gin.ReleaseMode)
 
-	r.Use(middleware.JwtAuth)
+	r.Use(middleware.JwtAuth, middleware.Aws())
 
 	route.Route(r)
 
