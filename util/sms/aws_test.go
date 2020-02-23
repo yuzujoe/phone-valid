@@ -7,7 +7,7 @@ import (
 )
 
 func TestPushSms(t *testing.T) {
-	phoneNumber := "08071985692"
+	phoneNumber := "08071986678"
 	fmt.Println(phoneNumber)
 
 	phone := strings.Replace(phoneNumber, "0", "+81", 1)
